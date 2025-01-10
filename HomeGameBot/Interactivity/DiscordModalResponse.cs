@@ -1,6 +1,7 @@
 ﻿namespace HomeGameBot.Interactivity;
 
-public class DiscordModalResponse
+public enum DiscordModalResponse
 {
-    
+    Success,
+    Timeout
 }

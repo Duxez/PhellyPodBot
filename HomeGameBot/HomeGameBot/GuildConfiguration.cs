@@ -1,6 +1,6 @@
 ﻿namespace HomeGameBot.HomeGameBot;
 
-public class GuildConfiguration
+internal sealed class GuildConfiguration
 {
     
 }

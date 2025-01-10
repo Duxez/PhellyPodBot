@@ -1,0 +1,6 @@
+﻿services:
+  homegamebot:
+    image: homegamebot
+    build:
+      context: .
+      dockerfile: HomeGameBot/Dockerfile

@@ -2,18 +2,14 @@
 
 namespace HomeGameBot.Interactivity;
 
-internal sealed class DiscordModalNumberInput
+internal sealed class DiscordModalTextInput
 {
-    public DiscordModalNumberInput(TextInputComponent component)
+    public DiscordModalTextInput(TextInputComponent component)
     {
         InputComponent = component;
 
         CustomId = component.CustomId;
-        int value;
-        if (int.TryParse(component.Value, out value))
-        {
-            Value = value;
-        }
+        Value = component.Value;
     }
     
     /// <summary>
@@ -32,7 +28,7 @@ internal sealed class DiscordModalNumberInput
     ///     Gets the value of the input.
     /// </summary>
     /// <value>The value.</value>
-    public int? Value { get; internal set; }
+    public string? Value { get; internal set; }
 
     internal string CustomId { get; }
 

@@ -3,7 +3,7 @@ using DSharpPlus.Exceptions;
 
 namespace HomeGameBot.Extensions;
 
-internal static class DiscordUserExntensions
+internal static class DiscordUserExtensions
 {
     public static async Task<DiscordMember?> GetAsMemberOfAsync(this DiscordUser user, DiscordGuild guild)
     {

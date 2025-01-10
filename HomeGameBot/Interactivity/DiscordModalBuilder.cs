@@ -6,7 +6,7 @@ namespace HomeGameBot.Interactivity;
 /// <summary>
 ///     Represents a class which can construct a <see cref="DiscordModal" />.
 /// </summary>
-public sealed class DiscordModalBuilder
+internal sealed class DiscordModalBuilder
 {
     private readonly DiscordClient _discordClient;
     private readonly List<DiscordModalTextInput> _inputs = new();
