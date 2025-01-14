@@ -31,21 +31,21 @@ internal sealed class PodCommand: ApplicationCommandModule
         DiscordModalTextInput podSizeInput = modal.AddInput(
             "Number of players", 
             "How many players are in the pod?", 
-            "4",
+            null,
             true,
             TextInputStyle.Short,
             1, 2);
         DiscordModalTextInput podTypeInput = modal.AddInput(
             "What MTG format?", 
             "What MTG format will be played?", 
-            "Commander",
+            null,
             true,
             TextInputStyle.Short,
             1, 255);
         DiscordModalTextInput podLocationInput = modal.AddInput(
             "Where? -> City + Area", 
             "Example: Tilburg Zuid (do not leave your address here!)", 
-            "Example: Tilburg Zuid (do not leave your address here!)",
+            null,
             true,
             TextInputStyle.Short,
             1, 255);
