@@ -1,3 +1,4 @@
+using System.Globalization;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -104,7 +105,8 @@ internal sealed class DiscordEditButton : DiscordButton
         pod.MaxPlayers = int.Parse(podSizeInput.Value);
         pod.Type = podTypeInput.Value;
         pod.Location = podLocationInput.Value;
-        pod.When = DateTime.Parse(podWhenInput.Value);
+        var cultureInfo = CultureInfo.InvariantCulture;
+        pod.When = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo);
         
         await DbContext.SaveChangesAsync();
         

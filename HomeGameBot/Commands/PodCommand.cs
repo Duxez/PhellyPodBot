@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System.Globalization;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
@@ -74,12 +75,13 @@ internal sealed class PodCommand: ApplicationCommandModule
 
         messageBuilder = DiscordPodButtons.GetPodButtons(client, _dbContext, messageBuilder);
 
+        var cultureInfo = CultureInfo.InvariantCulture;
         var pod = new Pod
         {
             Location = podLocationInput.Value,
             MaxPlayers = int.Parse(podSizeInput.Value),
             Type = podTypeInput.Value,
-            When = DateTime.Parse(podWhenInput.Value)
+            When = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo)
         };
         
         if(pod.When < DateTime.Now)
