@@ -49,15 +49,15 @@ internal sealed class DiscordEditButton : DiscordButton
             TextInputStyle.Short,
             1, 2);
         DiscordModalTextInput podTypeInput = modal.AddInput(
-            "Type of pod", 
-            "What type of pod is this?", 
+            "Which MTG format?", 
+            "What MTG format will be played?", 
             pod.Type,
             true,
             TextInputStyle.Short,
             1, 255);
         DiscordModalTextInput podLocationInput = modal.AddInput(
-            "Location", 
-            "Where is the pod being held?", 
+            "Where? -> City + Area", 
+            "Example: Tilburg Zuid (do not leave your address here!)", 
             pod.Location,
             true,
             TextInputStyle.Short,
