@@ -37,7 +37,7 @@ internal sealed class DatabaseService : BackgroundService
         await using HomeGameContext context = await _dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Creating database");
-        // await context.Database.EnsureCreatedAsync().ConfigureAwait(false);
+        await context.Database.EnsureCreatedAsync().ConfigureAwait(false);
 
         _logger.LogInformation("Applying migrations");
         await context.Database.MigrateAsync().ConfigureAwait(false);
