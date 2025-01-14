@@ -41,6 +41,9 @@ internal sealed class DiscordEditButton : DiscordButton
         var modal = new DiscordModalBuilder(DiscordClient);
         modal.WithTitle("Create a new pod");
         
+        var timezoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam");
+        var inTimeZone = TimeZoneInfo.ConvertTime(pod.When, timezoneInfo);
+        
         DiscordModalTextInput podSizeInput = modal.AddInput(
             "Number of players", 
             "How many players are in the pod?", 
@@ -102,7 +105,6 @@ internal sealed class DiscordEditButton : DiscordButton
         pod.Location = podLocationInput.Value;
         var cultureInfo = CultureInfo.InvariantCulture;
         var parsed = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo);
-        var timezoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam");
 
         var utc = TimeZoneInfo.ConvertTimeToUtc(parsed, timezoneInfo);
         
