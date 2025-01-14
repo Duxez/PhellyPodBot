@@ -74,6 +74,7 @@ internal sealed class DiscordEditButton : DiscordButton
             await modal.Build().RespondToAsync(e.Interaction, TimeSpan.FromMinutes(5))
                 .ConfigureAwait(false);
         
+        
         if (response == DiscordModalResponse.Timeout)
         {
             return;
@@ -90,12 +91,6 @@ internal sealed class DiscordEditButton : DiscordButton
             return;
         }
         
-        if(pod.When < DateTime.Now)
-        {
-            await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("A pod can't be created in the past!").AsEphemeral());
-            return;
-        }
-
         if (pod.MaxPlayers < 2)
         {
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("A pod can't have less than 2 players!").AsEphemeral());
@@ -106,7 +101,18 @@ internal sealed class DiscordEditButton : DiscordButton
         pod.Type = podTypeInput.Value;
         pod.Location = podLocationInput.Value;
         var cultureInfo = CultureInfo.InvariantCulture;
-        pod.When = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo);
+        var parsed = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo);
+        var timezoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam");
+
+        var utc = TimeZoneInfo.ConvertTimeToUtc(parsed, timezoneInfo);
+        
+        pod.When = utc;
+        
+        if(pod.When < DateTime.Now)
+        {
+            await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("A pod can't be created in the past!").AsEphemeral());
+            return;
+        }
         
         await DbContext.SaveChangesAsync();
         

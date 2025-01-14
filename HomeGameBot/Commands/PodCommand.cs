@@ -28,6 +28,9 @@ internal sealed class PodCommand: ApplicationCommandModule
         var modal = new DiscordModalBuilder(context.Client);
         modal.WithTitle("Create a new pod");
         
+        var timezoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam");
+        var now = TimeZoneInfo.ConvertTime(DateTime.UtcNow, timezoneInfo);
+        
         DiscordModalTextInput podSizeInput = modal.AddInput(
             "Number of players", 
             "How many players are in the pod?", 
@@ -52,7 +55,7 @@ internal sealed class PodCommand: ApplicationCommandModule
         DiscordModalTextInput podWhenInput = modal.AddInput(
             "When", 
             "When is the pod being held?", 
-            DateTime.Now.ToString("dd-MM-yyyy HH:mm"),
+            now.ToString("dd-MM-yyyy HH:mm"),
             true,
             TextInputStyle.Short,
             1, 255);
@@ -76,12 +79,15 @@ internal sealed class PodCommand: ApplicationCommandModule
         messageBuilder = DiscordPodButtons.GetPodButtons(client, _dbContext, messageBuilder);
 
         var cultureInfo = CultureInfo.InvariantCulture;
+        var parsed = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo);
+        
+        var utc = TimeZoneInfo.ConvertTimeToUtc(parsed, timezoneInfo);
         var pod = new Pod
         {
             Location = podLocationInput.Value,
             MaxPlayers = int.Parse(podSizeInput.Value),
             Type = podTypeInput.Value,
-            When = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo)
+            When = utc
         };
         
         if(pod.When < DateTime.Now)
