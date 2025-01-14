@@ -1,38 +1,20 @@
-﻿using DSharpPlus;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using HomeGameBot.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace HomeGameBot.Interactivity;
+namespace HomeGameBot.Interactivity.Buttons;
 
-internal sealed class DiscordButton
+internal sealed class DiscordJoinButton : DiscordButton
 {
-    private readonly DiscordClient _discordClient;
-    private readonly HomeGameContext _dbContext;
-    public string CustomId { get; private set; } = Guid.NewGuid().ToString("N");
-    public DiscordButtonComponent ButtonComponent { get; private set; }
-    
-    internal DiscordButton(DiscordClient discordClient, HomeGameContext dbContext, string label)
+    internal DiscordJoinButton(DiscordClient discordClient, HomeGameContext dbContext, string label) : base(discordClient, dbContext, label)
     {
-        _discordClient = discordClient;
-        _dbContext = dbContext;
-        _discordClient.ComponentInteractionCreated += OnButtonClicked;
-        
-        ButtonComponent = new DiscordButtonComponent(ButtonStyle.Primary, CustomId, label);
     }
     
-    private async Task OnButtonClicked(DiscordClient sender, ComponentInteractionCreateEventArgs e)
+    protected override async Task ButtonClicked(ulong messageId, ComponentInteractionCreateEventArgs e)
     {
-        if (e.Id != CustomId) return;
-        
-        var messageId = e.Message.Id;
-        await JoinButtonClicked(messageId, e);
-    }
-
-    private async Task JoinButtonClicked(ulong messageId, ComponentInteractionCreateEventArgs e)
-    {
-        var pod = _dbContext.Pods.Include(pod => pod.Users).FirstOrDefault(p => p.MessageId == messageId);
+        var pod = DbContext.Pods.Include(pod => pod.Users).FirstOrDefault(p => p.MessageId == messageId);
 
         if (pod is null)
         {
@@ -48,17 +30,18 @@ internal sealed class DiscordButton
             return;
         }
         
-        DiscordEmbedBuilder podEmbed = new DiscordEmbedBuilder();
+        DiscordEmbedBuilder podEmbed;
         var builder = new DiscordMessageBuilder();
         
-        var user = _dbContext.Users.FirstOrDefault(u => u.UserId == e.User.Id);
+        var user = DbContext.Users.FirstOrDefault(u => u.UserId == e.User.Id);
         if (user is null)
         {
             user = new User
             {
-                UserId = e.User.Id
+                UserId = e.User.Id,
+                DisplayName = e.Guild.GetMemberAsync(e.User.Id).Result.DisplayName
             };
-            await _dbContext.Users.AddAsync(user);
+            await DbContext.Users.AddAsync(user);
         } 
         else if (pod.Users.Contains(user))
         {
@@ -79,11 +62,11 @@ internal sealed class DiscordButton
         }
         
         pod.Users.Add(user);
-        await _dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
         builder.WithEmbed(podEmbed);
-        builder = DiscordPodButtons.GetPodButtons(_discordClient, _dbContext, builder);
+        builder = DiscordPodButtons.GetPodButtons(DiscordClient, DbContext, builder);
         
         await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
         await e.Message.ModifyAsync(builder);

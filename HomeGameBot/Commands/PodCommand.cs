@@ -5,6 +5,7 @@ using DSharpPlus.SlashCommands.Attributes;
 using HomeGameBot.Data;
 using HomeGameBot.Extensions;
 using HomeGameBot.Interactivity;
+using HomeGameBot.Interactivity.Buttons;
 using HomeGameBot.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,7 +51,7 @@ internal sealed class PodCommand: ApplicationCommandModule
         DiscordModalTextInput podWhenInput = modal.AddInput(
             "When", 
             "When is the pod being held?", 
-            "1-1-2025 12:00",
+            DateTime.Now.ToString("dd-MM-yyyy HH:mm"),
             true,
             TextInputStyle.Short,
             1, 255);
@@ -93,7 +94,8 @@ internal sealed class PodCommand: ApplicationCommandModule
             return;
         }
 
-        var displayName = context.User.GetAsMemberOfAsync(context.Guild).Result?.DisplayName ?? context.User.Username;
+        var discordMember = await context.Guild.GetMemberAsync(context.User.Id);
+        var displayName = discordMember.DisplayName;
         
         var hostUser = await _dbContext.Users.Where(u => u.UserId == context.User.Id).FirstOrDefaultAsync();
         if(hostUser == null)

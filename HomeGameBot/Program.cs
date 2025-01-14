@@ -1,4 +1,7 @@
-﻿using DSharpPlus;
+﻿using System;
+using System.IO;
+using System.Net.Http;
+using DSharpPlus;
 using HomeGameBot.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
