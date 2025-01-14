@@ -1,6 +1,15 @@
 ﻿services:
   homegamebot:
-    image: homegamebot
-    build:
-      context: .
-      dockerfile: HomeGameBot/Dockerfile
+    container_name: homegamebot
+    pull_policy: build
+    build: https://github.com/Duxez/PhellyPodBot.git
+    volumes:
+      - type: bind
+        source: /var/log/homegamebot
+        target: /app/logs
+      - type: bind
+        source: /etc/homegamebot
+        target: /app/data
+    restart: always
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
