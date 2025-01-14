@@ -23,6 +23,13 @@ internal sealed class DiscordDeleteButton : DiscordButton
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod not found! It might have expired.").AsEphemeral());
             return;   
         }
+        
+        if (e.User.Id != pod.Host.UserId)
+        {
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Only the host can delete the pod!").AsEphemeral());
+            return;
+        }
 
         DbContext.Remove(pod);
         await DbContext.SaveChangesAsync();

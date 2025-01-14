@@ -30,6 +30,13 @@ internal sealed class DiscordEditButton : DiscordButton
             return;
         }
         
+        if (e.User.Id != pod.Host.UserId)
+        {
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Only the host can edit the pod!").AsEphemeral());
+            return;
+        }
+        
         var modal = new DiscordModalBuilder(DiscordClient);
         modal.WithTitle("Create a new pod");
         
