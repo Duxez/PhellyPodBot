@@ -66,7 +66,7 @@ internal sealed class DiscordEditButton : DiscordButton
             TextInputStyle.Short,
             1, 255);
         DiscordModalTextInput podWhenInput = modal.AddInput(
-            "When", 
+            "Date & Time", 
             "When is the pod being held?", 
             pod.When.ToString("dd-MM-yyyy HH:mm"),
             true,

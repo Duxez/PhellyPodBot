@@ -53,7 +53,7 @@ internal sealed class PodCommand: ApplicationCommandModule
             TextInputStyle.Short,
             1, 255);
         DiscordModalTextInput podWhenInput = modal.AddInput(
-            "When", 
+            "Date & Time", 
             "When is the pod being held?", 
             now.ToString("dd-MM-yyyy HH:mm"),
             true,
