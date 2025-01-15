@@ -1,17 +1,9 @@
 ﻿using DSharpPlus.Entities;
 
-namespace HomeGameBot.Interactivity;
+namespace HomeGameBot.Interactivity.Modals;
 
-internal sealed class DiscordModalTextInput
+public sealed class DiscordModalTextInput(DiscordTextInputComponent component)
 {
-    public DiscordModalTextInput(TextInputComponent component)
-    {
-        InputComponent = component;
-
-        CustomId = component.CustomId;
-        Value = component.Value;
-    }
-    
     /// <summary>
     ///     Gets the label of the input.
     /// </summary>
@@ -28,11 +20,11 @@ internal sealed class DiscordModalTextInput
     ///     Gets the value of the input.
     /// </summary>
     /// <value>The value.</value>
-    public string? Value { get; internal set; }
+    public string? Value { get; internal set; } = component.Value;
 
-    internal string CustomId { get; }
+    internal string CustomId { get; } = component.CustomId;
 
-    internal TextInputComponent InputComponent { get; }
+    internal DiscordTextInputComponent InputComponent { get; } = component;
 
     internal DiscordModal? Modal { get; set; }
 }

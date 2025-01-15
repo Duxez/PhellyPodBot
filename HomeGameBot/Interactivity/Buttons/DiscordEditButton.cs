@@ -3,6 +3,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using HomeGameBot.Data;
+using HomeGameBot.Interactivity.Modals;
 using Microsoft.EntityFrameworkCore;
 
 namespace HomeGameBot.Interactivity.Buttons;
@@ -13,27 +14,27 @@ internal sealed class DiscordEditButton : DiscordButton
     {
     }
 
-    protected override async Task ButtonClicked(ulong messageId, ComponentInteractionCreateEventArgs e)
+    protected override async Task ButtonClicked(ulong messageId, ComponentInteractionCreatedEventArgs e)
     {
         var pod = DbContext.Pods.Include(pod => pod.Users).FirstOrDefault(p => p.MessageId == messageId);
 
         if (pod is null)
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod not found! It might have expired.").AsEphemeral());
             return; 
         }
 
         if (pod.HasExpired)
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod has expired!").AsEphemeral());
             return;
         }
         
         if (e.User.Id != pod.Host.UserId)
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Only the host can edit the pod!").AsEphemeral());
             return;
         }
@@ -49,28 +50,28 @@ internal sealed class DiscordEditButton : DiscordButton
             "How many players are in the pod?", 
             pod.MaxPlayers.ToString(),
             true,
-            TextInputStyle.Short,
+            DiscordTextInputStyle.Short,
             1, 2);
         DiscordModalTextInput podTypeInput = modal.AddInput(
             "Which MTG format?", 
             "What MTG format will be played?", 
             pod.Type,
             true,
-            TextInputStyle.Short,
+            DiscordTextInputStyle.Short,
             1, 255);
         DiscordModalTextInput podLocationInput = modal.AddInput(
             "Where? -> City + Area", 
             "Example: Tilburg Zuid (do not leave your address here!)", 
             pod.Location,
             true,
-            TextInputStyle.Short,
+            DiscordTextInputStyle.Short,
             1, 255);
         DiscordModalTextInput podWhenInput = modal.AddInput(
             "Date & Time", 
             "When is the pod being held?", 
             inTimeZone.ToString("dd-MM-yyyy HH:mm"),
             true,
-            TextInputStyle.Short,
+            DiscordTextInputStyle.Short,
             1, 255);
 
         DiscordModalResponse response =
@@ -120,7 +121,7 @@ internal sealed class DiscordEditButton : DiscordButton
         
         var builder = new DiscordMessageBuilder();
         var podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
-        builder.WithEmbed(podEmbed);
+        builder.AddEmbed(podEmbed);
         builder = DiscordPodButtons.GetPodButtons(DiscordClient, DbContext, builder);
         
         await e.Message.ModifyAsync(builder);

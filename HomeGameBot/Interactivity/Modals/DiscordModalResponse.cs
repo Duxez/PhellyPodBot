@@ -1,4 +1,4 @@
-﻿namespace HomeGameBot.Interactivity;
+﻿namespace HomeGameBot.Interactivity.Modals;
 
 public enum DiscordModalResponse
 {

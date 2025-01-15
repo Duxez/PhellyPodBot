@@ -2,7 +2,16 @@
 using System.IO;
 using System.Net.Http;
 using DSharpPlus;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands;
+using DSharpPlus.Extensions;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
+using HomeGameBot.Commands;
 using HomeGameBot.Data;
+using HomeGameBot.Interactivity;
+using HomeGameBot.Interactivity.Buttons;
+using HomeGameBot.Interactivity.Modals;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,12 +37,22 @@ builder.Configuration.AddJsonFile("data/config.json", true, true);
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
 
-builder.Services.AddSingleton(new DiscordClient(new DiscordConfiguration
+builder.Services.AddDiscordClient(Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
+    DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers | DiscordIntents.MessageContents);
+
+builder.Services.ConfigureEventHandlers(b =>
 {
-    Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
-    LoggerFactory = new SerilogLoggerFactory(),
-    Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers | DiscordIntents.MessageContents
-}));
+    b.AddEventHandlers([typeof(DiscordModal), typeof(BotService), typeof(DiscordButton)]);
+});
+builder.Services.AddInteractivityExtension(new InteractivityConfiguration());
+builder.Services.AddCommandsExtension((provider, extension) =>
+{
+    extension.AddCommands([typeof(InfoCommand), typeof(PodCommand)]);
+    extension.AddProcessor(new SlashCommandProcessor());
+}, new CommandsConfiguration()
+{
+    RegisterDefaultCommandProcessors = false
+});
 
 builder.Services.AddDbContextFactory<HomeGameContext>();
 builder.Services.AddHostedSingleton<DatabaseService>();

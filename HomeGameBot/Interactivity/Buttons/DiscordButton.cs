@@ -5,7 +5,7 @@ using HomeGameBot.Data;
 
 namespace HomeGameBot.Interactivity.Buttons;
 
-internal class DiscordButton
+internal class DiscordButton : IEventHandler<ComponentInteractionCreatedEventArgs>
 {
     protected readonly DiscordClient DiscordClient;
     protected readonly HomeGameContext DbContext;
@@ -16,22 +16,22 @@ internal class DiscordButton
     {
         DiscordClient = discordClient;
         DbContext = dbContext;
-        DiscordClient.ComponentInteractionCreated += OnButtonClicked;
         
-        ButtonComponent = new DiscordButtonComponent(ButtonStyle.Primary, CustomId, label);
+        ButtonComponent = new DiscordButtonComponent(DiscordButtonStyle.Primary, CustomId, label);
     }
-    
-    private async Task OnButtonClicked(DiscordClient sender, ComponentInteractionCreateEventArgs e)
+
+    protected virtual Task ButtonClicked(ulong messageId, ComponentInteractionCreatedEventArgs e)
+    {
+        // Implement this in an override from a derived class
+        return Task.CompletedTask;
+    }
+
+    public async Task HandleEventAsync(DiscordClient sender, ComponentInteractionCreatedEventArgs e)
     {
         if (e.Id != CustomId) return;
         
         var messageId = e.Message.Id;
-        await ButtonClicked(messageId, e);
-    }
 
-    protected virtual Task ButtonClicked(ulong messageId, ComponentInteractionCreateEventArgs e)
-    {
-        // Implement this in an override from a derived class
-        return Task.CompletedTask;
+        await ButtonClicked(messageId, e);
     }
 }

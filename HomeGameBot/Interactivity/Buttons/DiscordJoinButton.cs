@@ -12,20 +12,20 @@ internal sealed class DiscordJoinButton : DiscordButton
     {
     }
     
-    protected override async Task ButtonClicked(ulong messageId, ComponentInteractionCreateEventArgs e)
+    protected override async Task ButtonClicked(ulong messageId, ComponentInteractionCreatedEventArgs e)
     {
         var pod = DbContext.Pods.Include(pod => pod.Users).FirstOrDefault(p => p.MessageId == messageId);
 
         if (pod is null)
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod not found! It might have expired.").AsEphemeral());
             return;   
         }
         
         if (pod.IsFull)
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod is full!").AsEphemeral());
             return;
         }
@@ -45,16 +45,16 @@ internal sealed class DiscordJoinButton : DiscordButton
         } 
         else if (pod.Users.Contains(user))
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("You've already joined this pod!").AsEphemeral());
             return;
         }
         else if (pod.HasExpired)
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
 
             podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
-            builder.WithEmbed(podEmbed);
+            builder.AddEmbed(podEmbed);
             await e.Message.ModifyAsync(builder);
             
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod has expired!").AsEphemeral());
@@ -65,10 +65,10 @@ internal sealed class DiscordJoinButton : DiscordButton
         await DbContext.SaveChangesAsync();
 
         podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
-        builder.WithEmbed(podEmbed);
+        builder.AddEmbed(podEmbed);
         builder = DiscordPodButtons.GetPodButtons(DiscordClient, DbContext, builder);
         
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
         await e.Message.ModifyAsync(builder);
         await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("You've successively joined the pod!").AsEphemeral());
     }

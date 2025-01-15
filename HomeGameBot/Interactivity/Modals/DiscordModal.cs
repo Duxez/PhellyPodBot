@@ -1,34 +1,40 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using Microsoft.Extensions.Logging;
 
-namespace HomeGameBot.Interactivity;
+namespace HomeGameBot.Interactivity.Modals;
 
 /// <summary>
 ///     Represents a modal that can be displayed to the user.
 /// </summary>
-public sealed class DiscordModal
+public sealed class DiscordModal : IEventHandler<ModalSubmittedEventArgs>
 {
-    private readonly DiscordClient _discordClient;
+    private DiscordClient? _discordClient;
     private readonly string _customId = Guid.NewGuid().ToString("N");
     private readonly Dictionary<string, DiscordModalTextInput> _inputs = new();
     private TaskCompletionSource _taskCompletionSource = new();
 
-    internal DiscordModal(string title, IEnumerable<DiscordModalTextInput> inputs, DiscordClient discordClient)
+    public DiscordModal()
     {
-        _discordClient = discordClient;
-        Title = title;
-        discordClient.ModalSubmitted += OnModalSubmitted;
-
-        foreach (DiscordModalTextInput input in inputs)
-            _inputs.Add(input.CustomId, input);
     }
 
     /// <summary>
     ///     Gets the title of this modal.
     /// </summary>
     /// <value>The title.</value>
-    public string Title { get; }
+    public required string Title { get; set; }
+    
+    public void SetInputs(IEnumerable<DiscordModalTextInput> inputs)
+    {
+        foreach (DiscordModalTextInput input in inputs)
+            _inputs.Add(input.CustomId, input);
+    }
+    
+    public void SetClient(DiscordClient? discordClient)
+    {
+        _discordClient = discordClient;
+    }
 
     /// <summary>
     ///     Responds with this modal to the specified interaction.
@@ -48,7 +54,7 @@ public sealed class DiscordModal
             builder.AddComponents(input.InputComponent);
 
         _taskCompletionSource = new TaskCompletionSource();
-        await interaction.CreateResponseAsync(InteractionResponseType.Modal, builder).ConfigureAwait(false);
+        await interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, builder).ConfigureAwait(false);
 
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.Token.Register(() => _taskCompletionSource.TrySetCanceled());
@@ -66,35 +72,39 @@ public sealed class DiscordModal
         }
     }
 
-    private async Task OnModalSubmitted(DiscordClient sender, ModalSubmitEventArgs e)
+    private async Task OnModalSubmitted(DiscordClient sender, ModalSubmittedEventArgs e)
     {
         if (e.Interaction.Data.CustomId != _customId)
             return;
+        
+        var inputComponents = new List<DiscordTextInputComponent>();
 
-        _discordClient.ModalSubmitted -= OnModalSubmitted;
-
-        var inputComponents = new List<TextInputComponent>();
-
-        foreach (var component in e.Interaction.Data.Components)
-        {
-            switch (component)
+        if (e.Interaction.Data.Components != null)
+            foreach (var component in e.Interaction.Data.Components)
             {
-                case DiscordActionRowComponent rowComponent:
-                    inputComponents.AddRange(rowComponent.Components.OfType<TextInputComponent>());
-                    break;
-                case TextInputComponent textInputComponent:
-                    inputComponents.Add(textInputComponent);
-                    break;
+                switch (component)
+                {
+                    case DiscordActionRowComponent rowComponent:
+                        inputComponents.AddRange(rowComponent.Components.OfType<DiscordTextInputComponent>());
+                        break;
+                    case DiscordTextInputComponent textInputComponent:
+                        inputComponents.Add(textInputComponent);
+                        break;
+                }
             }
-        }
 
-        foreach (TextInputComponent inputComponent in inputComponents)
+        foreach (DiscordTextInputComponent inputComponent in inputComponents)
         {
             if (_inputs.TryGetValue(inputComponent.CustomId, out DiscordModalTextInput? input))
                 input.Value = inputComponent.Value;
         }
 
         _taskCompletionSource.TrySetResult();
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+    }
+
+    public async Task HandleEventAsync(DiscordClient sender, ModalSubmittedEventArgs eventArgs)
+    {
+        await OnModalSubmitted(sender, eventArgs);
     }
 }

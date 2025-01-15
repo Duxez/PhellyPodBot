@@ -1,7 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 
-namespace HomeGameBot.Interactivity;
+namespace HomeGameBot.Interactivity.Modals;
 
 /// <summary>
 ///     Represents a class which can construct a <see cref="DiscordModal" />.
@@ -53,10 +53,10 @@ internal sealed class DiscordModalBuilder
     /// <param name="maxLength">The maximum length of the input.</param>
     /// <returns>The <see cref="DiscordModalTextInput" /> which was created.</returns>
     public DiscordModalTextInput AddInput(string label, string? placeholder = null, string? initialValue = null,
-        bool isRequired = true, TextInputStyle inputStyle = TextInputStyle.Short, int minLength = 0, int? maxLength = null)
+        bool isRequired = true, DiscordTextInputStyle inputStyle = DiscordTextInputStyle.Short, int minLength = 0, int? maxLength = null)
     {
         var customId = Guid.NewGuid().ToString("N");
-        var input = new DiscordModalTextInput(new TextInputComponent(label, customId, placeholder, initialValue, isRequired,
+        var input = new DiscordModalTextInput(new DiscordTextInputComponent(label, customId, placeholder, initialValue, isRequired,
             inputStyle, minLength, maxLength));
         _inputs.Add(input);
         return input;
@@ -100,6 +100,12 @@ internal sealed class DiscordModalBuilder
             throw new InvalidOperationException("Title cannot be null or whitespace.");
         }
 
-        return new DiscordModal(Title, _inputs, _discordClient);
+        var modal = new DiscordModal()
+        {
+            Title = _title
+        };
+        modal.SetClient(_discordClient);
+        modal.SetInputs(_inputs);
+        return modal;
     }
 }
