@@ -10,6 +10,7 @@ using HomeGameBot.Data;
 using HomeGameBot.HomeGameBot;
 using HomeGameBot.Interactivity;
 using HomeGameBot.Interactivity.Buttons;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -187,7 +188,7 @@ internal sealed class BotService : BackgroundService
 
     private async Task CheckPods(DiscordClient sender, GuildDownloadCompletedEventArgs e)
     {
-        var pods = _homeGameContext.Pods.Where(p => p.When < DateTime.UtcNow).ToList();
+        var pods = _homeGameContext.Pods.Include(p => p.Host).Where(p => p.When < DateTime.UtcNow).ToList();
         _logger.LogInformation("Found {Count} expired pods", pods.Count);
         
         foreach (var pod in pods)
@@ -200,7 +201,7 @@ internal sealed class BotService : BackgroundService
         
         _logger.LogInformation("Removed {Count} expired pods", pods.Count);
 
-        var activePods = _homeGameContext.Pods;
+        var activePods = _homeGameContext.Pods.Include(p => p.Host);
         
         _logger.LogInformation("Found {Count} active pods", activePods.Count());
         foreach (var pod in activePods)
