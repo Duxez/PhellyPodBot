@@ -188,7 +188,7 @@ internal sealed class BotService : BackgroundService
 
     private async Task CheckPods(DiscordClient sender, GuildDownloadCompletedEventArgs e)
     {
-        var pods = _homeGameContext.Pods.Include(p => p.Host).Where(p => p.When < DateTime.UtcNow).ToList();
+        var pods = _homeGameContext.Pods.Include(p => p.Users).Where(p => p.When < DateTime.UtcNow).ToList();
         _logger.LogInformation("Found {Count} expired pods", pods.Count);
         
         foreach (var pod in pods)
@@ -201,7 +201,7 @@ internal sealed class BotService : BackgroundService
         
         _logger.LogInformation("Removed {Count} expired pods", pods.Count);
 
-        var activePods = _homeGameContext.Pods.Include(p => p.Host);
+        var activePods = _homeGameContext.Pods.Include(p => p.Users);
         
         _logger.LogInformation("Found {Count} active pods", activePods.Count());
         foreach (var pod in activePods)
