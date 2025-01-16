@@ -186,7 +186,7 @@ internal sealed class BotService : BackgroundService
 
     private async Task CheckPods()
     {
-        var pods = _homeGameContext.Pods.Where(p => p.When < DateTimeOffset.UtcNow).ToList();
+        var pods = _homeGameContext.Pods.Where(p => p.When < DateTime.UtcNow).ToList();
 
         foreach (var pod in pods)
         {
@@ -225,6 +225,7 @@ internal sealed class BotService : BackgroundService
         var podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
         var builder = new DiscordMessageBuilder().WithEmbed(podEmbed);
 
+        _logger.LogInformation("Updating pod {PodId} to remove buttons", pod.Id);
         await message.ModifyAsync(builder);
     }
 
@@ -249,6 +250,7 @@ internal sealed class BotService : BackgroundService
         var builder = new DiscordMessageBuilder().WithEmbed(podEmbed);
         builder = DiscordPodButtons.GetPodButtons(_discordClient, _homeGameContext, builder);
         
+        _logger.LogInformation("Updating pod {PodId} with buttons", pod.Id);
         await message.ModifyAsync(builder);
     }
 }
