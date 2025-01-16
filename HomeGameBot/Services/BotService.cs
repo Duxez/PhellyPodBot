@@ -224,6 +224,12 @@ internal sealed class BotService : BackgroundService
 
         var channel = guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value;
 
+        if (channel is null)
+        {
+            _logger.LogWarning("Channel not found for guild {GuildId} with channel Id {ChannelId}", guild.Id, guildConfig.ChannelId);
+            return;
+        }
+        
         var message = await channel.GetMessageAsync(pod.MessageId);
         if (message is null)
         {
