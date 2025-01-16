@@ -211,6 +211,7 @@ internal sealed class BotService : BackgroundService
         var guildConfig = _configurationService.GetGuildConfiguration(guild);
         if (guildConfig is null)
         {
+            _logger.LogWarning("Guild configuration not found for guild {GuildId}", guild.Id);
             return;
         }
 
@@ -219,6 +220,7 @@ internal sealed class BotService : BackgroundService
         var message = await channel.GetMessageAsync(pod.MessageId);
         if (message is null)
         {
+            _logger.LogWarning("Message not found for pod {PodId}", pod.Id);
             return;
         }
 
@@ -235,6 +237,7 @@ internal sealed class BotService : BackgroundService
         var guildConfig = _configurationService.GetGuildConfiguration(guild);
         if (guildConfig is null)
         {
+            _logger.LogWarning("Guild configuration not found for guild {GuildId}", guild.Id);
             return;
         }
         
@@ -243,6 +246,7 @@ internal sealed class BotService : BackgroundService
         var message = await channel.GetMessageAsync(pod.MessageId);
         if (message is null)
         {
+            _logger.LogWarning("Message not found for pod {PodId}", pod.Id);
             return;
         }
         
