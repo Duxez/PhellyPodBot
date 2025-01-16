@@ -230,12 +230,16 @@ internal sealed class BotService : BackgroundService
             return;
         }
         
+        _logger.LogInformation("Channel found: {ChannelId}", channel.Id);
+        
         var message = await channel.GetMessageAsync(pod.MessageId);
         if (message is null)
         {
             _logger.LogWarning("Message not found for pod {PodId}", pod.Id);
             return;
         }
+        
+        _logger.LogInformation("Message found: {MessageId}", message.Id);
 
         var podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
         var builder = new DiscordMessageBuilder().WithEmbed(podEmbed);
