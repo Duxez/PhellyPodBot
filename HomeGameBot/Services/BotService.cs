@@ -211,6 +211,8 @@ internal sealed class BotService : BackgroundService
     private async Task RemovePodButtonsFromExpiredPod(Pod pod)
     {
         var guild = _discordClient.Guilds.First().Value;
+        _logger.LogInformation("Guild found: {GuildId}", guild.Id);
+        
         var guildConfig = _configurationService.GetGuildConfiguration(guild);
         if (guildConfig is null)
         {
