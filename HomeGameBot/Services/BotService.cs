@@ -219,6 +219,8 @@ internal sealed class BotService : BackgroundService
             _logger.LogWarning("Guild configuration not found for guild {GuildId}", guild.Id);
             return;
         }
+        
+        _logger.LogInformation("Guild configuration found: {GuildConfig}", guildConfig);
 
         var channel = guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value;
 
