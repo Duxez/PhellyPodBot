@@ -187,7 +187,8 @@ internal sealed class BotService : BackgroundService
     private async Task CheckPods()
     {
         var pods = _homeGameContext.Pods.Where(p => p.When < DateTime.UtcNow).ToList();
-
+        _logger.LogInformation("Found {Count} expired pods", pods.Count);
+        
         foreach (var pod in pods)
         {
             await RemovePodButtonsFromExpiredPod(pod);
@@ -199,6 +200,8 @@ internal sealed class BotService : BackgroundService
         _logger.LogInformation("Removed {Count} expired pods", pods.Count);
 
         var activePods = _homeGameContext.Pods;
+        
+        _logger.LogInformation("Found {Count} active pods", activePods.Count());
         foreach (var pod in activePods)
         {
             await UpdateActivePod(pod);
