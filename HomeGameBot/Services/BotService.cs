@@ -6,6 +6,9 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using HomeGameBot.Commands;
+using HomeGameBot.Data;
+using HomeGameBot.Interactivity;
+using HomeGameBot.Interactivity.Buttons;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -16,12 +19,21 @@ internal sealed class BotService : BackgroundService
     private readonly ILogger<BotService> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly DiscordClient _discordClient;
+    private readonly HomeGameContext _homeGameContext;
+    private readonly ConfigurationService _configurationService;
     
-    public BotService(ILogger<BotService> logger, IServiceProvider serviceProvider, DiscordClient discordClient)
+    public BotService(
+        ILogger<BotService> logger,
+        IServiceProvider serviceProvider,
+        DiscordClient discordClient,
+        HomeGameContext homeGameContext,
+        ConfigurationService configurationService)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _discordClient = discordClient;
+        _homeGameContext = homeGameContext;
+        _configurationService = configurationService;
 
         var attribute = typeof(BotService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         Version = attribute?.InformationalVersion ?? "Unknown";
@@ -169,5 +181,69 @@ internal sealed class BotService : BackgroundService
 
             return Task.CompletedTask;
         };
+    }
+
+    private async Task CheckPods()
+    {
+        var pods = _homeGameContext.Pods.Where(p => p.When < DateTimeOffset.UtcNow).ToList();
+
+        foreach (var pod in pods)
+        {
+            await RemovePodButtonsFromExpiredPod(pod);
+        }
+        
+        _homeGameContext.RemoveRange(pods);
+        await _homeGameContext.SaveChangesAsync();
+        
+        _logger.LogInformation("Removed {Count} expired pods", pods.Count);
+
+        var activePods = _homeGameContext.Pods;
+    }
+
+    private async Task RemovePodButtonsFromExpiredPod(Pod pod)
+    {
+        var guild = _discordClient.Guilds.First().Value;
+        var guildConfig = _configurationService.GetGuildConfiguration(guild);
+        if (guildConfig is null)
+        {
+            return;
+        }
+
+        var channel = guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value;
+
+        var message = await channel.GetMessageAsync(pod.MessageId);
+        if (message is null)
+        {
+            return;
+        }
+
+        var podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
+        var builder = new DiscordMessageBuilder().WithEmbed(podEmbed);
+
+        await message.ModifyAsync(builder);
+    }
+
+    private async Task UpdateActivePod(Pod pod)
+    {
+        var guild = _discordClient.Guilds.First().Value;
+        var guildConfig = _configurationService.GetGuildConfiguration(guild);
+        if (guildConfig is null)
+        {
+            return;
+        }
+        
+        var channel = guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value;
+        
+        var message = await channel.GetMessageAsync(pod.MessageId);
+        if (message is null)
+        {
+            return;
+        }
+        
+        var podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
+        var builder = new DiscordMessageBuilder().WithEmbed(podEmbed);
+        builder = DiscordPodButtons.GetPodButtons(_discordClient, _homeGameContext, builder);
+        
+        await message.ModifyAsync(builder);
     }
 }
