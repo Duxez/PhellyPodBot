@@ -222,7 +222,12 @@ internal sealed class BotService : BackgroundService
         
         _logger.LogInformation("Channel ID: {ChannelId} for Guild {GuildId}", guildConfig.ChannelId, guild.Id);
 
-        var channel = guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value;
+        foreach (var channelLog in guild.Channels)
+        {
+            _logger.LogInformation("Channel found: {ChannelId}", channelLog.Value.Id);
+        }
+        
+        var channel = guild.Channels[guildConfig.ChannelId];
 
         _logger.LogInformation("Channel found: {ChannelId}", channel.Id);
         if (channel is null)
