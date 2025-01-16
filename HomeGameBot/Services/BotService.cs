@@ -220,7 +220,7 @@ internal sealed class BotService : BackgroundService
             return;
         }
         
-        _logger.LogInformation("Guild configuration found: {GuildConfig}", guildConfig);
+        _logger.LogInformation("Channel ID: {ChannelId} for Guild {GuildId}", guildConfig.ChannelId, guild.Id);
 
         var channel = guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value;
 
