@@ -7,6 +7,7 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using HomeGameBot.Commands;
 using HomeGameBot.Data;
+using HomeGameBot.HomeGameBot;
 using HomeGameBot.Interactivity;
 using HomeGameBot.Interactivity.Buttons;
 using Microsoft.Extensions.Hosting;
@@ -66,6 +67,7 @@ internal sealed class BotService : BackgroundService
         
         _logger.LogInformation("Connecting to Discord...");
         _discordClient.Ready += OnReady;
+        _discordClient.GuildDownloadCompleted += CheckPods;
 
         RegisterEvents(slashCommands);
         
@@ -75,7 +77,6 @@ internal sealed class BotService : BackgroundService
     private Task OnReady(DiscordClient sender, ReadyEventArgs e)
     {
         _logger.LogInformation("Discord client ready");
-        _ = CheckPods();
         return Task.CompletedTask;
     }
     
@@ -184,7 +185,7 @@ internal sealed class BotService : BackgroundService
         };
     }
 
-    private async Task CheckPods()
+    private async Task CheckPods(DiscordClient sender, GuildDownloadCompletedEventArgs e)
     {
         var pods = _homeGameContext.Pods.Where(p => p.When < DateTime.UtcNow).ToList();
         _logger.LogInformation("Found {Count} expired pods", pods.Count);
@@ -221,7 +222,7 @@ internal sealed class BotService : BackgroundService
         }
         
         _logger.LogInformation("Channel ID: {ChannelId} for Guild {GuildId}", guildConfig.ChannelId, guild.Id);
-
+        _logger.LogInformation("Amount of channels found: {Count}", guild.Channels.Count);
         foreach (var channelLog in guild.Channels)
         {
             _logger.LogInformation("Channel found: {ChannelId}", channelLog.Value.Id);
@@ -256,17 +257,29 @@ internal sealed class BotService : BackgroundService
 
     private async Task UpdateActivePod(Pod pod)
     {
-        var guild = _discordClient.Guilds.First().Value;
-        var guildConfig = _configurationService.GetGuildConfiguration(guild);
+        GuildConfiguration? guildConfig = null;
+        DiscordGuild? discordGuild = null;
+        
+        foreach (var guild in _discordClient.Guilds)
+        {
+            var config = _configurationService.GetGuildConfiguration(guild.Value);
+            if (config is not null)
+            {
+                guildConfig = config;
+                discordGuild = guild.Value;
+                break;
+            }
+        }
+        
         if (guildConfig is null)
         {
-            _logger.LogWarning("Guild configuration not found for guild {GuildId}", guild.Id);
+            _logger.LogWarning("Guild configuration not found for guild {GuildId}", discordGuild?.Id);
             return;
         }
         
-        var channel = guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value;
+        var channel = discordGuild?.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value;
         
-        var message = await channel.GetMessageAsync(pod.MessageId);
+        var message = await channel?.GetMessageAsync(pod.MessageId)!;
         if (message is null)
         {
             _logger.LogWarning("Message not found for pod {PodId}", pod.Id);
