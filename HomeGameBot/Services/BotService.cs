@@ -75,6 +75,7 @@ internal sealed class BotService : BackgroundService
     private Task OnReady(DiscordClient sender, ReadyEventArgs e)
     {
         _logger.LogInformation("Discord client ready");
+        _ = CheckPods();
         return Task.CompletedTask;
     }
     
@@ -198,6 +199,10 @@ internal sealed class BotService : BackgroundService
         _logger.LogInformation("Removed {Count} expired pods", pods.Count);
 
         var activePods = _homeGameContext.Pods;
+        foreach (var pod in activePods)
+        {
+            await UpdateActivePod(pod);
+        }
     }
 
     private async Task RemovePodButtonsFromExpiredPod(Pod pod)
