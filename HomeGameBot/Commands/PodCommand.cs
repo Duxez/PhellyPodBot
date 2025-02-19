@@ -9,16 +9,21 @@ using HomeGameBot.Interactivity;
 using HomeGameBot.Interactivity.Buttons;
 using HomeGameBot.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace HomeGameBot.Commands;
 
 internal sealed class PodCommand: ApplicationCommandModule
 {
     private readonly HomeGameContext _dbContext;
+    private readonly ConfigurationService _configurationService;
+    private readonly ILogger<PodCommand> _logger;
     
-    public PodCommand(HomeGameContext dbContext)
+    public PodCommand(HomeGameContext dbContext, ConfigurationService configurationService, ILogger<PodCommand> logger)
     {
         _dbContext = dbContext;
+        _configurationService = configurationService;
+        _logger = logger;
     }
     
     [SlashCommand("pod", "Create a new at home kitchentable pod.")]
@@ -119,7 +124,15 @@ internal sealed class PodCommand: ApplicationCommandModule
             displayName);
                 
         messageBuilder.WithEmbed(embed);
-        var message = await context.Channel.SendMessageAsync(messageBuilder);
+        
+        var guildConfig = _configurationService.GetGuildConfiguration(context.Guild);
+        if (guildConfig is null)
+        {
+            _logger.LogWarning("Guild configuration not found for guild {GuildId}", context.Guild.Id);
+            return;
+        }
+        
+        var message = await context.Guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value.SendMessageAsync(messageBuilder);
         pod.MessageId = message.Id;
         
         await _dbContext.Pods.AddAsync(pod);
