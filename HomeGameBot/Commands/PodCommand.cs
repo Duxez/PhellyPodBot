@@ -53,9 +53,16 @@ internal sealed class PodCommand: ApplicationCommandModule
             TextInputStyle.Short,
             1, 255);
         DiscordModalTextInput podWhenInput = modal.AddInput(
-            "Date & Time", 
+            "Date", 
             "When is the pod being held?", 
-            now.ToString("dd-MM-yyyy HH:mm"),
+            now.ToString("dd MMM"),
+            true,
+            TextInputStyle.Short,
+            1, 255);
+        DiscordModalTextInput podWhenTimeInput = modal.AddInput(
+            "Time", 
+            "At what time is the pod being held?", 
+            "12:00",
             true,
             TextInputStyle.Short,
             1, 255);
@@ -68,7 +75,7 @@ internal sealed class PodCommand: ApplicationCommandModule
             return;
         }
         
-        if(string.IsNullOrWhiteSpace(podSizeInput.Value) || string.IsNullOrWhiteSpace(podTypeInput.Value) || string.IsNullOrWhiteSpace(podLocationInput.Value) || string.IsNullOrWhiteSpace(podWhenInput.Value))
+        if(string.IsNullOrWhiteSpace(podSizeInput.Value) || string.IsNullOrWhiteSpace(podTypeInput.Value) || string.IsNullOrWhiteSpace(podLocationInput.Value) || string.IsNullOrWhiteSpace(podWhenInput.Value) || string.IsNullOrWhiteSpace(podWhenTimeInput.Value))
         {
             return;
         }
@@ -77,24 +84,15 @@ internal sealed class PodCommand: ApplicationCommandModule
         DiscordMessageBuilder messageBuilder = new();
 
         messageBuilder = DiscordPodButtons.GetPodButtons(client, _dbContext, messageBuilder);
-
-        var cultureInfo = CultureInfo.InvariantCulture;
-        var parsed = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo);
         
-        var utc = TimeZoneInfo.ConvertTimeToUtc(parsed, timezoneInfo);
         var pod = new Pod
         {
             Location = podLocationInput.Value,
             MaxPlayers = int.Parse(podSizeInput.Value),
             Type = podTypeInput.Value,
-            When = utc
+            When = podWhenInput.Value,
+            Time = podWhenTimeInput.Value
         };
-        
-        if(pod.When < DateTime.Now)
-        {
-            await context.FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent("Pod can't be in the past!").AsEphemeral());
-            return;
-        }
 
         if (pod.MaxPlayers < 2)
         {

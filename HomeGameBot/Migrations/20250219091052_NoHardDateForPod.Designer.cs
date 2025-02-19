@@ -3,6 +3,7 @@ using System;
 using HomeGameBot.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HomeGameBot.Migrations
 {
     [DbContext(typeof(HomeGameContext))]
-    partial class HomeGameContextModelSnapshot : ModelSnapshot
+    [Migration("20250219091052_NoHardDateForPod")]
+    partial class NoHardDateForPod
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");

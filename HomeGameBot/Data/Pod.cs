@@ -17,7 +17,10 @@ internal sealed record Pod
     
     public int MaxPlayers { get; set; }
     
-    public DateTime When { get; set; }
+    public string When { get; set; }
+    public string Time { get; set; }
+    
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
     
     [NotMapped]
     public ulong HostId => Users.First().UserId;
@@ -29,6 +32,4 @@ internal sealed record Pod
     
     [NotMapped]
     public bool IsFull => CurrentPlayers >= MaxPlayers;
-    [NotMapped]
-    public bool HasExpired => DateTime.Now > When;
 }

@@ -34,19 +34,6 @@ internal sealed class DiscordLeaveButton : DiscordButton
             return;  
         }
         
-        if (pod.HasExpired)
-        {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-
-            podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
-            builder.WithEmbed(podEmbed);
-            await e.Message.ModifyAsync(builder);
-
-            await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder()
-                .WithContent("Pod has expired!").AsEphemeral());
-            return;
-        }
-        
         if (pod.Host == user)
         {
             await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);

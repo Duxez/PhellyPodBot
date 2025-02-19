@@ -23,13 +23,6 @@ internal sealed class DiscordEditButton : DiscordButton
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod not found! It might have expired.").AsEphemeral());
             return; 
         }
-
-        if (pod.HasExpired)
-        {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-            await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod has expired!").AsEphemeral());
-            return;
-        }
         
         if (e.User.Id != pod.Host.UserId)
         {
@@ -40,9 +33,6 @@ internal sealed class DiscordEditButton : DiscordButton
         
         var modal = new DiscordModalBuilder(DiscordClient);
         modal.WithTitle("Create a new pod");
-        
-        var timezoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam");
-        var inTimeZone = TimeZoneInfo.ConvertTime(pod.When, timezoneInfo);
         
         DiscordModalTextInput podSizeInput = modal.AddInput(
             "Number of players", 
@@ -66,9 +56,16 @@ internal sealed class DiscordEditButton : DiscordButton
             TextInputStyle.Short,
             1, 255);
         DiscordModalTextInput podWhenInput = modal.AddInput(
-            "Date & Time", 
+            "Date", 
             "When is the pod being held?", 
-            inTimeZone.ToString("dd-MM-yyyy HH:mm"),
+            pod.When,
+            true,
+            TextInputStyle.Short,
+            1, 255);
+        DiscordModalTextInput podWhenTimeInput = modal.AddInput(
+            "Time", 
+            "When is the pod being held?", 
+            pod.Time,
             true,
             TextInputStyle.Short,
             1, 255);
@@ -83,7 +80,7 @@ internal sealed class DiscordEditButton : DiscordButton
             return;
         }
         
-        if(string.IsNullOrWhiteSpace(podSizeInput.Value) || string.IsNullOrWhiteSpace(podTypeInput.Value) || string.IsNullOrWhiteSpace(podLocationInput.Value) || string.IsNullOrWhiteSpace(podWhenInput.Value))
+        if(string.IsNullOrWhiteSpace(podSizeInput.Value) || string.IsNullOrWhiteSpace(podTypeInput.Value) || string.IsNullOrWhiteSpace(podLocationInput.Value) || string.IsNullOrWhiteSpace(podWhenInput.Value) || string.IsNullOrWhiteSpace(podWhenTimeInput.Value))
         {
             return;
         }
@@ -103,18 +100,8 @@ internal sealed class DiscordEditButton : DiscordButton
         pod.MaxPlayers = int.Parse(podSizeInput.Value);
         pod.Type = podTypeInput.Value;
         pod.Location = podLocationInput.Value;
-        var cultureInfo = CultureInfo.InvariantCulture;
-        var parsed = DateTime.ParseExact(podWhenInput.Value, "dd-MM-yyyy HH:mm", cultureInfo);
-
-        var utc = TimeZoneInfo.ConvertTimeToUtc(parsed, timezoneInfo);
-        
-        pod.When = utc;
-        
-        if(pod.When < DateTime.Now)
-        {
-            await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("A pod can't be created in the past!").AsEphemeral());
-            return;
-        }
+        pod.When = podWhenInput.Value;
+        pod.Time = podWhenTimeInput.Value;
         
         await DbContext.SaveChangesAsync();
         

@@ -49,17 +49,6 @@ internal sealed class DiscordJoinButton : DiscordButton
             await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("You've already joined this pod!").AsEphemeral());
             return;
         }
-        else if (pod.HasExpired)
-        {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-
-            podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
-            builder.WithEmbed(podEmbed);
-            await e.Message.ModifyAsync(builder);
-            
-            await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("Pod has expired!").AsEphemeral());
-            return;
-        }
         
         pod.Users.Add(user);
         await DbContext.SaveChangesAsync();
