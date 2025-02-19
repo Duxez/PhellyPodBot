@@ -111,6 +111,6 @@ internal sealed class DiscordEditButton : DiscordButton
         builder = DiscordPodButtons.GetPodButtons(DiscordClient, DbContext, builder);
         
         await e.Message.ModifyAsync(builder);
-        await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("You've successively joined the pod!").AsEphemeral());
+        await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("You've successively edited the pod!").AsEphemeral());
     }
 }

@@ -57,6 +57,6 @@ internal sealed class DiscordLeaveButton : DiscordButton
         
         await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
         await e.Message.ModifyAsync(builder);
-        await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("You've successively joined the pod!").AsEphemeral());
+        await e.Interaction.CreateFollowupMessageAsync(new DiscordFollowupMessageBuilder().WithContent("You've successively left the pod!").AsEphemeral());
     }
 }
