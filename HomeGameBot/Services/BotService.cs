@@ -249,11 +249,7 @@ internal sealed class BotService : BackgroundService
         
         _logger.LogInformation("Message found: {MessageId}", message.Id);
 
-        var podEmbed = DiscordPodEmbed.GetDiscordPodEmbed(pod, pod.Host.DisplayName);
-        var builder = new DiscordMessageBuilder().WithEmbed(podEmbed);
-
-        _logger.LogInformation("Updating pod {PodId} to remove buttons", pod.Id);
-        await message.ModifyAsync(builder);
+        await message.DeleteAsync();
     }
 
     private async Task UpdateActivePod(Pod pod)

@@ -13,6 +13,10 @@ internal sealed class DiscordPodEmbed
     public static DiscordEmbedBuilder GetDiscordPodEmbed(Pod pod, string hostName)
     {
         DiscordColor color = _colors[new Random().Next(_colors.Length)];
+        
+        if(string.IsNullOrEmpty(pod.Time))
+            pod.Time = "Not specified";
+        
         var embed = new DiscordEmbedBuilder();
         embed.WithColor(color);
         embed.WithTitle($"New kitchen table pod by {hostName}");
