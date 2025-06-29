@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace HomeGameBot.Commands;
 
-internal sealed class PodCommand: ApplicationCommandModule
+internal sealed class PodCommand(HomeGameContext dbContext) : ApplicationCommandModule
 {
     private readonly HomeGameContext _dbContext;
     private readonly ConfigurationService _configurationService;
@@ -108,7 +108,7 @@ internal sealed class PodCommand: ApplicationCommandModule
         var discordMember = await context.Guild.GetMemberAsync(context.User.Id);
         var displayName = discordMember.DisplayName;
         
-        var hostUser = await _dbContext.Users.Where(u => u.UserId == context.User.Id).FirstOrDefaultAsync();
+        var hostUser = await dbContext.Users.Where(u => u.UserId == context.User.Id).FirstOrDefaultAsync();
         if(hostUser == null)
         {
             hostUser = new User
@@ -116,7 +116,7 @@ internal sealed class PodCommand: ApplicationCommandModule
                 UserId = context.User.Id,
                 DisplayName = displayName
             };
-            await _dbContext.Users.AddAsync(hostUser);
+            await dbContext.Users.AddAsync(hostUser);
         }
         pod.Users.Add(hostUser);
         
@@ -135,9 +135,38 @@ internal sealed class PodCommand: ApplicationCommandModule
         var message = await context.Guild.Channels.First(c => c.Value.Id == guildConfig.ChannelId).Value.SendMessageAsync(messageBuilder);
         pod.MessageId = message.Id;
         
-        await _dbContext.Pods.AddAsync(pod);
-        await _dbContext.SaveChangesAsync();
+        await dbContext.Pods.AddAsync(pod);
+        await dbContext.SaveChangesAsync();
         
         await context.FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent("Pod created!").AsEphemeral());
+        
+        DmAlerts(pod, context);
+    }
+
+    private async void DmAlerts(Pod pod, InteractionContext context)
+    {
+        var users = dbContext.Users.Where(u => u.AlertEnabled == true).ToList();
+        
+        foreach (var user in users)
+        {
+            if (user.UserId == pod.HostId)
+            {
+                continue;
+            }
+            
+            var discordUser = await context.Guild.GetMemberAsync(user.UserId);
+            var dmChannel = await discordUser.CreateDmChannelAsync();
+            if (dmChannel == null)
+            {
+                continue;
+            }
+
+            var embed = DiscordPodEmbed.GetDiscordPodEmbed(pod, user.DisplayName);
+            var messageBuilder = new DiscordMessageBuilder()
+                .WithContent($"A new pod has been created by {user.DisplayName}!")
+                .AddEmbed(embed);
+
+            dmChannel.SendMessageAsync(messageBuilder);
+        }
     }
 }

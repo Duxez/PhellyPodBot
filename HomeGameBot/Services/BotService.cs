@@ -65,6 +65,7 @@ internal sealed class BotService : BackgroundService
         _logger.LogInformation("Registering commands...");
         slashCommands.RegisterCommands<InfoCommand>();
         slashCommands.RegisterCommands<PodCommand>();
+        slashCommands.RegisterCommands<AlertCommand>();
         
         _logger.LogInformation("Connecting to Discord...");
         _discordClient.Ready += OnReady;

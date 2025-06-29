@@ -3,6 +3,7 @@ using System;
 using HomeGameBot.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HomeGameBot.Migrations
 {
     [DbContext(typeof(HomeGameContext))]
-    partial class HomeGameContextModelSnapshot : ModelSnapshot
+    [Migration("20250629081143_AddAlertToUser")]
+    partial class AddAlertToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -22,9 +25,6 @@ namespace HomeGameBot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -36,16 +36,11 @@ namespace HomeGameBot.Migrations
                     b.Property<ulong>("MessageId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Time")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("When")
-                        .IsRequired()
+                    b.Property<DateTime>("When")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
